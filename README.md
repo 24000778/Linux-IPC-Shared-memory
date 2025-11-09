@@ -1,4 +1,3 @@
-![Screenshot 2025-05-01 190941](https://github.com/user-attachments/assets/9b6b660d-9e2e-42c9-91bc-3a7985c2891b)Ex06-Linux IPC-Shared-memory
 
 # AIM:
 To Write a C program that illustrates two processes communicating using shared memory.
