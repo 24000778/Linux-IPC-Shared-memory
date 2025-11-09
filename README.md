@@ -8,7 +8,7 @@ Name: G.Sindhu Priya Reddy
 Reg No:212224040319
 
 
-# Ex03-Linux IPC - Pipes
+
 
 # AIM:
 To write a C program that illustrate communication between two process using unnamed and named pipes
