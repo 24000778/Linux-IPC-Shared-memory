@@ -1,17 +1,10 @@
-# Linux-IPC--Pipes
-Linux-IPC-Pipes
 
 
-Name: G.Sindhu Priya Reddy
-
-
-Reg No:212224040319
-
-
-
+### NAME: G.SINDHU PRIYA REDDY
+### 212224040319
 
 # AIM:
-To write a C program that illustrate communication between two process using unnamed and named pipes
+To Write a C program that illustrates two processes communicating using shared memory.
 
 # DESIGN STEPS:
 
@@ -21,68 +14,110 @@ Navigate to any Linux environment installed on the system or installed inside a 
 
 ### Step 2:
 
-Write the C Program using Linux Process API - pipe(), fifo()
+Write the C Program using Linux Process API - Shared Memory
 
 ### Step 3:
 
-Testing the C Program for the desired output. 
+Execute the C Program for the desired output. 
 
 # PROGRAM:
 
-## C Program that illustrate communication between two process using unnamed pipes using Linux API system calls
-```#include<stdlib.h>
-#include<sys/types.h> 
-#include<sys/stat.h> 
-#include<string.h> 
-#include<fcntl.h> 
-#include<unistd.h>
-#include<sys/wait.h>
-void server(int,int); 
-void client(int,int); 
-int main() 
-{ 
-int p1[2],p2[2],pid, *waits; 
-pipe(p1); 
-pipe(p2); 
-pid=fork(); 
-if(pid==0) { 
-close(p1[1]); 
-close(p2[0]); 
-server(p1[0],p2[1]); return 0;
- } 
-close(p1[0]); 
-close(p2[1]); 
-client(p1[1],p2[0]); 
-wait(waits); 
-return 0; 
-} 
-
-void server(int rfd,int wfd) 
-{ 
-int i,j,n; 
-char fname[2000]; 
-char buff[2000];
-n=read(rfd,fname,2000);
-fname[n]='\0';
-int fd=open(fname,O_RDONLY);
-sleep(10); 
-if(fd<0) 
-write(wfd,"can't open",9); 
-else 
-n=read(fd,buff,2000); 
-write(wfd,buff,n); 
+## Write a C program that illustrates two processes communicating using shared memory.
+shm.c
+```
+#include<unistd.h> 
+#include<stdlib.h> 
+#include<stdio.h> 
+#include<string.h>
+#include<sys/shm.h>
+#define TEXT_SZ 2048 
+struct shared_use_st{
+int written_by_you;
+char some_text[TEXT_SZ];
+};
+int main()
+{
+int running =1;
+void *shared_memory = (void *)0; 
+struct shared_use_st *shared_stuff; 
+char buffer[BUFSIZ];
+int shmid;
+shmid	=shmget(	(key_t)1234,	sizeof(struct shared_use_st), 0666 | IPC_CREAT);
+printf("Shared memort id = %d \n",shmid);
+if (shmid == -1)
+{
+fprintf(stderr, "shmget failed\n"); exit(EXIT_FAILURE);
 }
-void client(int wfd,int rfd) {
-int i,j,n; char fname[2000];
-char buff[2000];
-printf("ENTER THE FILE NAME :");
-scanf("%s",fname);
-printf("CLIENT SENDING THE REQUEST .... PLEASE WAIT\n");
-sleep(10);
-write(wfd,fname,2000);
-n=read(rfd,buff,2000);
-buff[n]='\0';
-printf("THE RESULTS OF CLIENTS ARE ...... \n"); write(1,buff,n);
+shared_memory=shmat(shmid, (void *)0, 0);
+if (shared_memory == (void *)-1){
+fprintf(stderr,	"shmat	failed\n"); exit(EXIT_FAILURE);}
+printf("Memory Attached at %x\n", (int) shared_memory); 
+shared_stuff = (struct shared_use_st *)shared_memory; 
+while(running)
+{
+while(shared_stuff->written_by_you== 1)
+{
+sleep(1);
+printf("waiting for client.	\n");
+}
+printf("Enter Some Text: "); fgets (buffer, BUFSIZ, stdin);
+strncpy(shared_stuff->some_text, buffer, TEXT_SZ);
+shared_stuff->written_by_you = 1;
+if(strncmp(buffer, "end", 3) == 0){
+running = 0;}}
+if (shmdt(shared_memory) == -1)
+{
+fprintf(stderr, "shmdt failed\n"); exit(EXIT_FAILURE);
+} exit(EXIT_SUCCESS);
+}
+```
+
+shmry2.c
+```
+#include<unistd.h> 
+#include<stdlib.h> 
+#include<stdio.h> 
+#include<string.h>
+#include<sys/shm.h>
+#define TEXT_SZ 2048 
+struct shared_use_st{
+int written_by_you;
+char some_text[TEXT_SZ];
+};
+int main()
+{
+int running =1;
+void *shared_memory = (void *)0; 
+struct shared_use_st *shared_stuff; 
+char buffer[BUFSIZ];
+int shmid;
+shmid	=shmget(	(key_t)1234,	sizeof(struct shared_use_st), 0666 | IPC_CREAT);
+printf("Shared memort id = %d \n",shmid);
+if (shmid == -1)
+{
+fprintf(stderr, "shmget failed\n"); exit(EXIT_FAILURE);
+}
+shared_memory=shmat(shmid, (void *)0, 0);
+if (shared_memory == (void *)-1){
+fprintf(stderr,	"shmat	failed\n"); exit(EXIT_FAILURE);}
+printf("Memory Attached at %x\n", (int) shared_memory); 
+shared_stuff = (struct shared_use_st *)shared_memory; 
+while(running)
+{
+while(shared_stuff->written_by_you== 1)
+{
+sleep(1);
+printf("waiting for client.	\n");
+}
+printf("Enter Some Text: "); fgets (buffer, BUFSIZ, stdin);
+strncpy(shared_stuff->some_text, buffer, TEXT_SZ);
+shared_stuff->written_by_you = 1;
+if(strncmp(buffer, "end", 3) == 0){
+running = 0;}}
+if (shmdt(shared_memory) == -1)
+{
+fprintf(stderr, "shmdt failed\n"); exit(EXIT_FAILURE);
+} exit(EXIT_SUCCESS);
 }
 ```
 
@@ -91,32 +126,20 @@ printf("THE RESULTS OF CLIENTS ARE ...... \n"); write(1,buff,n);
 
 
 ## OUTPUT
-![Screenshot 2025-04-30 113255](https://github.com/user-attachments/assets/00d6ad8d-db24-46d5-bfb3-e34bc55a508f)
+### $ ./shm.o
+![Screenshot 2025-05-01 190913](https://github.com/user-attachments/assets/87da3066-b669-4255-8f1f-a461b767c201)
+
+### $ ./shmry2.o
+1![Screenshot 2025-05-01 190925](https://github.com/user-attachments/assets/2903f502-ac93-426d-b1f2-1f59e55f9f11)
+
+### $ipcs
+![Screenshot 2025-05-01 190941](https://github.com/user-attachments/assets/05cee6d6-ece5-43d3-bcfb-c1889871e885)
 
 
 
 
 
-## C Program that illustrate communication between two process using named pipes using Linux API system calls
-```
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-int main(){
-int res = mkfifo("/tmp/my_fifo", 0777);
-if (res == 0) printf("FIFO created\n");
-exit(EXIT_SUCCESS);
-}
-```
 
-
-
-
-
-## OUTPUT
-![Screenshot 2025-04-30 113452](https://github.com/user-attachments/assets/5064a21f-c610-4f77-a8be-78fe11ecc55d)
 
 
 # RESULT:
